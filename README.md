@@ -9,11 +9,6 @@ For license information check the [LICENSE](LICENSE.md)-file.
 
 Documentation is at [docs/guide/README.md](docs/guide/README.md).
 
-Requirements
-------------
-
-This extension works with elasticsearch version 1.0 to 4.x. elasticsearch 5.0 is currently not supported.
-
 Installation
 ------------
 
