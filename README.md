@@ -32,7 +32,14 @@ return [
     //....
     'components' => [
         'ots' => [
-
+            'EndPoint' => '',
+            'AccessKeyID' => '',
+            'AccessKeySecret' => '',
+            'InstanceName' => '',
+            'DebugLogHandler' => '',
+            'ConnectionTimeout' => '',
+            'SocketTimeout' => '',
+            'ErrorLogHandler' => '',
         ],
     ]
 ];

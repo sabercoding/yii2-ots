@@ -1,0 +1,17 @@
+{
+    "name": "sabercoding/yii2-ots",
+    "description": "This extension provides the OTS integration for the Yii2.",
+    "type": "library",
+    "authors": [
+        {
+            "name": "saber cai",
+            "email": "sabercoding@gmail.com"
+        }
+    ],
+    "require": {
+        "sabercoding/php-ots": "v0.1"
+    },
+    "autoload": {
+        "psr-4": { "SaberCoding\\Ots\\": "" }
+    }
+}
