@@ -9,7 +9,7 @@
         }
     ],
     "require": {
-        "sabercoding/php-ots": "v0.1"
+        "sabercoding/php-ots": "*"
     },
     "autoload": {
         "psr-4": { "SaberCoding\\Ots\\": "" }
