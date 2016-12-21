@@ -8,6 +8,7 @@
             "email": "sabercoding@gmail.com"
         }
     ],
+    "minimum-stability": "dev",
     "require": {
         "sabercoding/php-ots": "*"
     },
