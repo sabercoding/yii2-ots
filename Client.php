@@ -6,8 +6,7 @@ use yii\base\Component;
 use yii\db\Exception;
 
 /**
- *
- * Class Ots
+ * Class Client
  * @package SaberCoding\Ots
  */
 class Client extends Component {
