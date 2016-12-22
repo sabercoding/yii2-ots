@@ -10,7 +10,7 @@
             "email": "sabercoding@gmail.com"
         }
     ],
-    "minimum-stability": "dev-master",
+    "minimum-stability": "stable",
     "require": {
         "sabercoding/php-ots": "*",
         "yiisoft/yii2": "~2.0.4"
