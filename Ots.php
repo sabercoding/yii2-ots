@@ -10,11 +10,8 @@ use yii\db\Exception;
  * Class Ots
  * @package SaberCoding\Ots
  */
-class Ots extends Component {
-    const NAME_DEFAULT = 'common';
-
-    protected static $ots_client = array();
-    protected $name = null;
+class Client extends Component {
+    protected static $ots_client;
     public $EndPoint = '';
     public $AccessKeyID = '';
     public $AccessKeySecret = '';
@@ -23,40 +20,24 @@ class Ots extends Component {
     public $ConnectionTimeout = 5.0;
     public $SocketTimeout = 5.0;
     public $ErrorLogHandler = null;
-
-
-    public function __construct($name = self::NAME_DEFAULT) {
-        $this->name = $name;
-    }
-
-    protected function getInstance() {
-        if (!isset(self::$ots_client[$this->name])) {
-            $this->configure();
+    protected function ots() {
+        if (!isset(self::$ots_client)) {
+            $config = array(
+                'EndPoint' => $this->EndPoint,
+                'AccessKeyID' => $this->AccessKeyID,
+                'AccessKeySecret' => $this->AccessKeySecret,
+                'InstanceName' => $this->InstanceName,
+                'DebugLogHandler' => $this->DebugLogHandler,
+                'ConnectionTimeout' => $this->ConnectionTimeout,
+                'SocketTimeout' => $this->SocketTimeout,
+                'ErrorLogHandler' => $this->ErrorLogHandler,
+            );
+            if (!$config) {
+                throw new \Exception(get_class($this) . ' need be configured. ');
+            }
+            self::$ots_client= new OTSClient($config);
         }
-        /**
-         * @var \Aliyun\OTS\OTSClient $ots_client [$this->name]
-         */
-        return self::$ots_client[$this->name];
-    }
-
-    /**
-     * 初始化配置信息
-     */
-    protected function configure() {
-        $config = array(
-            'EndPoint' => $this->EndPoint,
-            'AccessKeyID' => $this->AccessKeyID,
-            'AccessKeySecret' => $this->AccessKeySecret,
-            'InstanceName' => $this->InstanceName,
-            'DebugLogHandler' => $this->DebugLogHandler,
-            'ConnectionTimeout' => $this->ConnectionTimeout,
-            'SocketTimeout' => $this->SocketTimeout,
-            'ErrorLogHandler' => $this->ErrorLogHandler,
-        );
-        if (!$config) {
-            throw new \Exception(get_class($this) . ' need be configured. Config : ' . $this->name);
-        }
-        self::$ots_client[$this->name] = new OTSClient($config);
+        return self::$ots_client;
     }
 
     /**
@@ -75,7 +56,7 @@ class Ots extends Component {
             'primary_key' => $primary,
             'attribute_columns' => $columns,
         );
-        $response = $this->_otsFunction('putRow', array($request));
+        $response = $this->executeCommand('putRow', array($request));
         return (bool)$response['consumed']['capacity_unit']['write'];
     }
 
@@ -104,7 +85,7 @@ class Ots extends Component {
                 ),
             ),
         );
-        $response = $this->_otsFunction('batchWriteRow', array($request));
+        $response = $this->executeCommand('batchWriteRow', array($request));
         return $response['tables'][0]['put_rows'];
     }
 
@@ -133,7 +114,7 @@ class Ots extends Component {
                 ),
             ),
         );
-        $response = $this->_otsFunction('batchWriteRow', array($request));
+        $response = $this->executeCommand('batchWriteRow', array($request));
         return $response['tables'][0]['update_rows'];
     }
 
@@ -161,7 +142,7 @@ class Ots extends Component {
                 ),
             ),
         );
-        $response = $this->_otsFunction('batchWriteRow', array($request));
+        $response = $this->executeCommand('batchWriteRow', array($request));
         return $response['tables'][0]['delete_rows'];
     }
 
@@ -180,7 +161,7 @@ class Ots extends Component {
             'primary_key' => $primary,
             'columns_to_get' => $columns
         );
-        $response = $this->_otsFunction('getRow', array($request));
+        $response = $this->executeCommand('getRow', array($request));
         return $response['row']['attribute_columns'];
     }
 
@@ -205,7 +186,7 @@ class Ots extends Component {
                 ),
             ),
         );
-        $response = $this->_otsFunction('batchGetRow', array($request));
+        $response = $this->executeCommand('batchGetRow', array($request));
         $batch_result = array();
         if (count($response['tables'][0]['rows']) > 0) {
             foreach ($response['tables'][0]['rows'] as $list) {
@@ -237,13 +218,13 @@ class Ots extends Component {
 
         $request = array(
             'table_name' => $table,
-            'direction' => $direction,                          // 方向可以为 FORWARD 或者 BACKWARD
+            'direction' => $direction,                         // 方向可以为 FORWARD 或者 BACKWARD
             'inclusive_start_primary_key' => $startPK,         // 开始主键
             'exclusive_end_primary_key' => $endPK,             // 结束主键
             'columns_to_get' => $columns,
             'limit' => $limit
         );
-        $response = $this->_otsFunction('getRange', array($request));
+        $response = $this->executeCommand('getRange', array($request));
 
         unset($response['consumed']);
         return $response;
@@ -277,7 +258,7 @@ class Ots extends Component {
             );
         }
 
-        $response = $this->_otsFunction('updateRow', array($request));
+        $response = $this->executeCommand('updateRow', array($request));
         return (bool)$response['consumed']['capacity_unit']['write'];
     }
 
@@ -296,7 +277,7 @@ class Ots extends Component {
             'condition' => $condition,
             'primary_key' => $primary,
         );
-        $response = $this->_otsFunction('deleteRow', array($request));
+        $response = $this->executeCommand('deleteRow', array($request));
         return (bool)$response['consumed']['capacity_unit']['write'];
     }
 
@@ -308,7 +289,7 @@ class Ots extends Component {
      * @throws \Exception
      */
     public function __call($name, $args = array()) {
-        return $this->_otsFunction($name, $args);
+        return $this->executeCommand($name, $args);
     }
 
     /**
@@ -318,14 +299,14 @@ class Ots extends Component {
      * @return mixed
      * @throws \Exception
      */
-    private function _otsFunction($name, array $args = array()) {
+    private function executeCommand($name, array $args = array()) {
         try {
-            $ret = call_user_func_array(array($this->getInstance(), $name), $args);
+            $ret = call_user_func_array(array($this->ots(), $name), $args);
         } catch (\Exception $e) {
             if ($e instanceof \Exception) {
                 throw $e;
             } else {
-                throw new \Exception($e->getCode() . ' ' . $e->getMessage());
+                throw new Exception($e->getCode() . ' ' . $e->getMessage());
             }
         }
         return $ret;
